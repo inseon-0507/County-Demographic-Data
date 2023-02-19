@@ -1,0 +1,448 @@
+---
+title: "STA 108 Project 2"
+author: "Mahir Oza, Dylan M. Ang, In Seon Kim"
+date: "3/5/2022"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Background
+The United States Census Bureau is a government organization that collects and produces data about the American people and economy. Its mission is to display quality data about the population in all regions of America. Every 10 years, they conduct a population and housing census that includes all residents living in the United States. They not only count the population, but also gather information about different factors in order to analyze the people and economy.
+
+Throughout our project, we analyze the County Demographic Information (CDI) provided by the United States Census Bureau. The data set displays information about 440 populous counties in the United States with 14 different variables to describe the county's economy. The counties range from all throughout the US, from Orange County in California to Wayne County in North Carolina. Various data variables such as land area, total population, number of active physicians, number of hospital beds, total serious crime, percent high school graduates, percent bachelor's degree, etc were gathered for a single county. Some counties with missing data were deleted from the data set. The data reflects the years 1990 and 1992. 
+
+Continuing from Project 1, we will be analyzing our CDI data with multiple linear regression and analyze how each variable contributes to the overall data. We will further be formulating tests to determine how well the predictor variable is explained by the linear regression model. Data is provided from the textbook "Applied Linear Statistical Models" and our project will contain three parts:
+
+1. Part I: Multiple linear regression I.
+1. Part II: Multiple linear regression II.
+1. Part III: Discussion
+1. Appendix
+
+
+\newpage
+
+# Part 1
+
+```{r}
+cdi_data = read.table("./CDI.txt")
+phy = cdi_data$V8 # Number of Active Physicians
+pop = cdi_data$V5 # Total Population
+are = cdi_data$V4 # Land Area
+inc = cdi_data$V16 # total personal income
+den = pop / are # Population density
+sen = cdi_data$V7
+```
+
+## a
+
+```{r}
+# par(mfrow = c(1,2))
+# stem(pop, width = 20)
+# stem(are, width = 20)
+# stem(inc, width = 20)
+# stem(den, width = 20)
+# stem(sen, width = 20)
+```
+
+### Total Population $(X_{1,1})$
+```{r}
+stem(pop)
+```
+
+### Land Area $(X_{1,2})$
+```{r}
+stem(are)
+```
+
+### Total Personal Income $(X_{1,3})$ and $(X_{2,3})$
+```{r}
+stem(inc)
+```
+
+### Population Density $(X_{2, 1})$
+```{r}
+stem(den)
+```
+
+### Total Population over 64 $(X_{2,2})$
+```{r}
+stem(sen)
+```
+
+Stem and Leaf plots tell us about the distribution of the data. 
+In this case we can see that all of the predictor variable data is right-skewed.
+We see that Total Population, Land Area, Total Personal Income, and Population Density all have outliers. 
+
+\newpage
+
+## b 
+
+```{r}
+# Create Dataframes
+model1 = data.frame(Y = phy, X1 = pop, X2 = are, X3 = inc)
+colnames(model1) = c("Active Physicians (Y)", "Total Population (X1)", "Land Area (X2)", "Total Personal Income (X3)")
+
+model2 = data.frame(Y = phy, X1 = den, X2 = sen, X3 = inc)
+colnames(model2) = c("Active Physicians (Y)", "Population Density (X1)", "Population Over 64 (X2)", "Total Personal Income (X3)")
+```
+
+```{r}
+pairs(model1, main = "Scatter Plot Matrix (Model 1)")
+cor(model1)
+```
+
+Total Population (X1) and Total Personal Income (X3) are highly correlated to The Number of Active Physicians (Y) with correlation coefficients of $0.940$ and $0.948$, respectively. 
+This means there is a strong linear relationship between the predictor variables and number of active physicians.
+Land Area (X2) has a weak correlation with Active Physicians (Y) with a coefficient of $0.078$. 
+This means there is a weak linear relationship between land area and the number of active physicians.
+Based on the scatter plot, Total Population and Total Personal Income are positively correlated with Active Physicians, meaning that when they increase, the number of Active Physicians increases as well.
+
+```{r}
+pairs(model2, main = "Scatter Plot Matrix (Model 2)")
+cor(model2)
+```
+
+Of the three predictor variables, Total Personal Income (X3) has the strongest linear relationship with the number of Active Physicians (Y) with a correlation coefficient of $0.948$. 
+Then, Population Density (X1) has a weaker linear relationship with Active Physicians (Y) with a correlation coefficient of $0.406$.
+Finally, Population Over 64 (X2) has the weakest linear relationship with Active Physicians (Y) with a correlation coefficient of $-0.00312$. 
+X2 also has the only negative correlation coefficient.
+Based on the scatter plot, Population Density and Total Personal Income are positively correlated with Active Physicians (Y). Therefore, as those predictors increase, the number of active physicians will also increase.
+
+\newpage
+## c
+
+```{r}
+# Get models
+fit1 = lm(model1)
+fit2 = lm(model2)
+
+f1s = summary(fit1)
+f2s = summary(fit2)
+
+betas1 = fit1$coefficients
+betas2 = fit2$coefficients
+```
+
+### Model 1
+
+$$
+  Y = `r round(betas1[1], digits = 3)` + `r round(betas1[2], digits = 3)` X_1 + `r round(betas1[3], digits = 3)`X_2 + `r round(betas1[4], digits = 3)` X_3
+$$
+
+### Model 2
+
+$$
+  Y = `r round(betas2[1], digits = 3)` + `r round(betas2[2], digits = 3)` X_1 + `r round(betas2[3], digits = 3)`X_2 + `r round(betas2[4], digits = 3)` X_3
+$$
+
+```{r}
+slope = betas1[2] + betas1[3] + betas1[4]
+int = betas1[1]
+```
+
+## d
+
+```{r}
+model1.R2 = f1s$r.squared
+model2.R2 = f2s$r.squared
+```
+
+\begin{align*}
+  \text{Model 1} \; R^2: & \quad `r model1.R2` \\
+  \text{Model 2} \; R^2: & \quad `r model2.R2` \\
+\end{align*}
+
+Based on the $R^2$ value, Model 2 is a slightly better model, but they are close.
+
+## e: Model 1
+```{r}
+# Get residuals
+m1.resid = f1s$residuals
+
+m1.yhat = fit1$fitted.values
+
+par(mfrow = c(2,2))
+
+# Residual Plots
+plot(m1.resid ~ m1.yhat,
+     main = "Model 1: Residuals ~ Fitted values", xlab = "Fitted Values", ylab = "Residuals")
+abline(0,0,col = "red")
+
+# Predictors
+plot(x = (pop)/1000000,y = m1.resid,
+     main = "Model 1: Residuals ~ Population", xlab = "Population (1 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(m1.resid ~ are,
+     main = "Model 1: Residuals ~ Area", xlab = "Land Area", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(m1.resid ~ inc,
+     main = "Model 1: Residuals ~ Income", xlab = "Personal Income", ylab = "Residuals")
+abline(0,0,col = "red")
+
+par(mfrow = c(2,2))
+
+# Two Factor
+plot(x = (pop/100000) * (are/10000), y = m1.resid,
+     main = "Model 1: Residuals ~ Population * Area", xlab = "Population * Area (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(x = (pop/100000) * (inc/10000), y = m1.resid,
+     main = "Model 1: Residuals ~ Population * Income", xlab = "Population * Income (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(x = (are * inc)/10000000, y = m1.resid,
+     main = "Model 1: Residuals ~ Area * Income", xlab = "Area * Income (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+```
+
+### Model 2
+
+```{r}
+# Get residuals
+m2.resid = f2s$residuals
+
+m2.yhat = fit2$fitted.values
+
+par(mfrow = c(2,2))
+
+# Residual Plots
+plot(m2.resid ~ m2.yhat,
+     main = "Model 2: Residuals ~ Fitted values", xlab = "Fitted Values", ylab = "Residuals")
+abline(0,0,col = "red")
+
+# Predictors
+plot(x = (pop)/1000000,y = m2.resid,
+     main = "Model 2: Residuals ~ Population", xlab = "Population (1 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(m2.resid ~ are,
+     main = "Model 2: Residuals ~ Area", xlab = "Land Area", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(m2.resid ~ inc,
+     main = "Model 2: Residuals ~ Income", xlab = "Personal Income", ylab = "Residuals")
+abline(0,0,col = "red")
+
+par(mfrow = c(2,2))
+
+# Two Factor
+plot(x = (pop/100000) * (are/10000), y = m2.resid,
+     main = "Model 2: Residuals ~ Population * Area", xlab = "Population * Area (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(x = (pop/100000) * (inc/10000), y = m2.resid,
+     main = "Model 2: Residuals ~ Population * Income", xlab = "Population * Income (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+plot(x = (are * inc)/10000000, y = m2.resid,
+     main = "Model 1: Residuals ~ Area * Income", xlab = "Area * Income (10 Million)", ylab = "Residuals")
+abline(0,0,col = "red")
+
+```
+
+\newpage
+
+## f
+
+```{r}
+tf1_12 <- lm(phy ~ pop*are+inc)
+tf1_13 <- lm(phy ~ pop*inc+are)
+tf1_23 <- lm(phy ~ are*inc+pop)
+
+r2_12 <- summary(tf1_12)$r.squared
+r2_13 <- summary(tf1_13)$r.squared
+r2_23 <- summary(tf1_23)$r.squared
+
+res1 <- c(a = r2_12, b = r2_13, c = r2_23)
+names(res1) <- c("(R2 of X1*X2)", "(R2 of X1*X3)", "(R2 of X2*X3)")
+
+tf2_12 <- lm(phy ~ den*sen+inc)
+tf2_13 <- lm(phy ~ den*inc+sen)
+tf2_23 <- lm(phy ~ sen*inc+den)
+
+r2_12 <- summary(tf2_12)$r.squared
+r2_13 <- summary(tf2_13)$r.squared
+r2_23 <- summary(tf2_23)$r.squared
+
+res2 <- c(a = r2_12, b = r2_13, c = r2_23)
+names(res2) <- c("(R2 of X1*X2)", "(R2 of X1*X3)", "(R2 of X2*X3)")
+```
+
+### Model 1
+
+```{r}
+tf1_b12 <- tf1_12$coefficients
+tf1_b13 <- tf1_13$coefficients
+tf1_b23 <- tf1_23$coefficients
+```
+
+\begin{align}
+Y_{1,2} & = `r round(tf1_b12[1],3)` + `r round(tf1_b12[2],3)` x_1 + `r round(tf1_b12[3],3)` x_2 + `r round(tf1_b12[4],3)` x_{3} + `r format(round(tf1_b12[5],8), scientific = FALSE)` x_1 x_2 \\
+Y_{1,3} & = `r round(tf1_b13[1],3)` + `r round(tf1_b13[2],3)` x_1 + `r round(tf1_b13[3],3)` x_2 + `r round(tf1_b13[4],3)` x_{3} + `r format(round(tf1_b13[5],9), scientific = FALSE)` x_1 x_3 \\
+Y_{2,3} & = `r round(tf1_b23[1],3)` + `r round(tf1_b23[2],3)` x_1 + `r round(tf1_b23[3],3)` x_2 + `r round(tf1_b23[4],3)` x_{3} + `r format(round(tf1_b23[5],8), scientific = FALSE)` x_2 x_3
+\end{align}
+
+### Model 2
+
+```{r}
+tf2_b12 <- tf2_12$coefficients
+tf2_b13 <- tf2_13$coefficients
+tf2_b23 <- tf2_23$coefficients
+```
+
+\begin{align}
+Y_{1,2} & = `r round(tf2_b12[1],3)` + `r round(tf2_b12[2],3)` x_1 + `r round(tf2_b12[3],3)` x_2 + `r round(tf2_b12[4],3)` x_{3} + `r format(round(tf2_b12[5],8), scientific = FALSE)` x_1 x_2 \\
+Y_{1,3} & = `r round(tf2_b13[1],3)` + `r round(tf2_b13[2],3)` x_1 + `r round(tf2_b13[3],3)` x_2 + `r round(tf2_b13[4],3)` x_{3} + `r format(round(tf2_b13[5],8), scientific = FALSE)` x_1 x_3 \\
+Y_{2,3} & = `r round(tf2_b23[1],3)` + `r round(tf2_b23[2],3)` x_1 + `r round(tf2_b23[3],3)` x_2 + `r round(tf2_b23[4],3)` x_{3} + `r format(round(tf2_b23[5],8), scientific = FALSE)` x_2 x_3
+\end{align}
+
+### $R^2$ values of two factor interaction terms in Model 1
+
+```{r}
+res1
+```
+
+### $R^2$ values of two factor interaction terms in Model 2
+
+```{r}
+res2
+```
+
+For Model 1, the model with the $x_2 * x_3$ interaction term had the highest $R^2$ value of the other possible interaction models. Therefore, this is the preferable model, since a higher proportion of the variability in our response variable (number of active physicians) is explained by our predictors.
+
+For Model 2, the model with the $x_1 * x_2$ interaction term had the highest $R^2$ value of the other possible interaction models. Therefore, this is the preferable model, since a higher proportion of the variability in our response variable (number of active physicians) is explained by our predictors.
+
+\newpage
+# Part 2
+
+## a
+
+```{r}
+# already have other predictors
+bed <- cdi_data$V9
+fit  <- lm(phy ~ pop+inc)
+fit3 <- lm(phy ~ pop+inc+are)
+fit4 <- lm(phy ~ pop+inc+sen)
+fit5 <- lm(phy ~ pop+inc+bed)
+
+SSE <- function(fit) {
+  tail(anova(fit)$`Sum Sq`, n = 1)
+}
+
+r2_3 = 1 - SSE(fit3)/SSE(fit)
+r2_4 = 1 - SSE(fit4)/SSE(fit)
+r2_5 = 1 - SSE(fit5)/SSE(fit)
+
+# c(r2_3, r2_4, r2_5)
+```
+
+\begin{align*}
+  R^2_{Y,3|1,2} & = `r round(r2_3, 4)` \\
+  R^2_{Y,4|1,2} & = `r round(r2_4, 4)` \\
+  R^2_{Y,5|1,2} & = `r round(r2_5, 4)`
+\end{align*}
+
+## b
+
+The coefficient of partial determination measures measures the proportionate
+reduction in variation of the response variable (number of active physicians)
+due to adding a new predictor ($x_3, x_4, \text{or } x_5$), given that
+$x_1$ (total population) and $x_2$ (total personal income) are already 
+in the model.
+This means since the model including $x_5$ (number of hospital beds)
+had the higher proportion/coefficient of determination, `r round(r2_5, 4)`, 
+this predictor variable is the best and most important to the 
+model as it reduces the
+most variation in the number of active physicians being predicted. This higher
+proportion means that the sum of squares of the predictor being number of beds,
+is greater than the sum of squares for the other predictors, land area and 
+proportion of population over 65, since the coefficient of partial determination
+is a ratio between the sum of squares of the predictor being considered and the 
+predictors already in the model.
+
+## c
+
+```{r}
+F5=anova(fit5)$Sum[3]/(SSE(fit5)/anova(fit5)$Df[4])
+Fval=qf(1-0.01,1,436)
+```
+$$H_0: \beta_5 = 0$$
+$$H_1: \beta_5 \neq 0$$
+$$F^* = `r round(F5, 4)` > `r round(Fval, 4)` $$
+reject $H_0$
+
+Conclude that at the 1% significance level there is significant evidence that
+$x_5$ (number of hospital beds) is helpful in the regression model for predicting
+the response variable, number of active physicians, given that $x_1$ 
+(total population) and $x_2$ (total personal income) are already in the model.
+Furthermore, we would not expect the $F^*$ of the other 2 predictor variables, 
+land area and percent of population older than 65, to be as high as the one
+for number of hospital beds. This is because the $F^*$ value is calculated as
+the ratio between the sum of squares of the predictor in question given 
+$x_1$ and $x_2$ are already in the model and the mean squared error of the 
+whole model including the predictor in question. Since the sum of squares of 
+the number of hospital beds is higher, this would mean this ratio and 
+$F^*$ value is greater and therefore given the null the outcome demonstrated
+by the data is more extreme as compared to the other possible predictor 
+candidates.
+
+## d
+```{r}
+fit34=lm(phy~pop+inc+are+sen)
+fit35=lm(phy~pop+inc+are+bed)
+fit45=lm(phy~pop+inc+sen+bed)
+r2_34=1-SSE(fit34)/SSE(fit)
+r2_35=1-SSE(fit35)/SSE(fit)
+r2_45=1-SSE(fit45)/SSE(fit)
+```
+
+\begin{align*}
+  R^2_{Y,3,4|1,2} & = `r round(r2_34, 4)` \\
+  R^2_{Y,3,5|1,2} & = `r round(r2_35, 4)` \\
+  R^2_{Y,4,5|1,2} & = `r round(r2_45, 4)`
+\end{align*}
+
+Based on these coefficient of partial determinations it is clear that the
+best pairing of 
+predictors to use given that $x_1$ and $x_2$ are already in the model are 
+$x_4$ (percent of seniors over 65) and $x_5$ (total number of hospital beds). 
+By considering the pairing of these two predictors we can see that this pair
+reduces the greatest proportion of variation (`r round(r2_45, 4)`) in 
+the total number active physicians compared to the other 2 possible pairings.
+
+```{r}
+SSE1245=SSE(fit45)
+SSE12=SSE(fit)
+SSR45=SSE12-SSE1245
+F45=(SSR45/2)/(SSE12/435)
+Fval45=qf(1-0.01,2,435)
+```
+
+$$H_0: \beta_4 = \beta_5 = 0$$
+$$H_1: \beta_4 \neq 0 \text{ or } \beta_5 \neq 0 \text{ or both} \neq 0$$
+$$F^* = `r round(F45, 4)` > `r round(Fval45, 4)` $$
+reject $H_0$
+
+Have significant evidence, that at the 1% significance level, the pairing of 
+both or either of
+$x_4$ (proportion of population over 65) and $x_5$ (number of hospital beds)
+would be helpful and useful to our model given that $x_1$ (total population)
+and $x_2$ (total personal income) are already in the model.
+
+\newpage
+
+# Part 3
+
+# Appendix
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
